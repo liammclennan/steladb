@@ -11,3 +11,5 @@ const result = new Query("cars")
     .evaluate(db);
 
 console.log(result);
+
+console.log(new Query("cars").select("*", undefined).evaluate(db));

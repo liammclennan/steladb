@@ -3,6 +3,7 @@ import * as Database from "./database";
 
 export class Query {
     private _table: string;
+    private _select: string[] = [];
 
     private _aggregations: { columnName: string, aggregation: Aggregation.AggregationName }[] = [];
     private _filters: { columnName: string, value: unknown }[] = [];
@@ -12,8 +13,16 @@ export class Query {
         this._table = table;
     }
 
-    select(columnName: string, aggregation: Aggregation.AggregationName): Query {
-        this._aggregations.push({ columnName, aggregation });
+    select(columnName: string, aggregation: Aggregation.AggregationName | undefined): Query {
+        if (typeof aggregation === "undefined") {
+            if (columnName === "*") {
+                this._select.push(columnName);
+            } else {
+                throw new Error("`aggregation` is required");
+            }
+        } else {   
+            this._aggregations.push({ columnName, aggregation });
+        }
         return this;
     }
 
@@ -54,7 +63,10 @@ export class Query {
 
         for (const [value, row_ixs] of groups) {
             const row = [];
-            row.push(value);
+            
+            if (typeof this._grouping !== "undefined") {
+                row.push(value);
+            }
             
             for (const select of this._aggregations) {
                 const aggregator = Aggregation.getAggregator(select.aggregation);
