@@ -5,12 +5,12 @@
   "main": "index.js",
   "scripts": {
     "test": "npx tsx --test",
-    "start": "npx tsc && node dist/index.js",
+    "start": "npx tsx src/index.ts",
     "write": "node scripts/write.js ./assets/cars.csv cars"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "devDependencies": {
     "@types/node": "^25.3.3",
     "tsx": "^4.21.0",
