@@ -1,0 +1,28 @@
+make,model,year,mileage,price
+Toyota,Camry,2018,65000,19500
+Toyota,Corolla,2018,72000,16200
+Toyota,RAV4,2020,45000,26500
+Toyota,Camry,2020,38000,24000
+Honda,Civic,2015,92000,12800
+Honda,CR-V,2018,55000,21500
+Honda,Accord,2018,60000,19800
+Honda,Civic,2021,22000,23500
+Ford,F-150,2020,42000,34500
+Ford,Explorer,2020,48000,29000
+Ford,Escape,2018,68000,15500
+Ford,F-150,2018,85000,27000
+Chevrolet,Equinox,2017,78500,14200
+Chevrolet,Silverado,2020,52000,38000
+Chevrolet,Malibu,2018,70000,14500
+Mazda,CX-5,2019,51000,21000
+Mazda,3,2019,42000,17500
+Subaru,Outback,2016,105000,15750
+Subaru,Forester,2018,62000,19000
+Tesla,Model 3,2021,28000,31000
+Tesla,Model Y,2021,24000,39500
+Hyundai,Elantra,2022,15000,18900
+Hyundai,Tucson,2022,12000,25500
+Nissan,Altima,2019,44000,16500
+Nissan,Rogue,2019,49000,18200
+Volkswagen,Jetta,2018,59000,14900
+Volkswagen,Tiguan,2018,61000,17800

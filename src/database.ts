@@ -1,4 +1,6 @@
 import * as Aggregation from "./aggregation";
+import fs from "node:fs";
+import path from 'node:path';
 
 export class StelaDB {
     private _path: string;
@@ -8,13 +10,19 @@ export class StelaDB {
     }
 
     column(table: string, columnName: string): Column {
-        switch (columnName) {
-            case "make": return new LiteralColumn(['Honda',    'Tesla',    'Honda',    'Ford',     'BMW',  'Ford', 'Volkswagen',   'Tesla',    'Ford', 'Kia']);
-            case "year": return new LiteralColumn(['1999',     '1999',     '1995',     '1999',     '1998', '1999', '2000',         '1999',     '1999', '2000']);
-            case "price": return new LiteralColumn([10_000,    12_000,     8_000,      10_000,     10_000, 12_000, 8_000,          14_000,     10_000, 16_000]);
-        }
+        const tablePath = path.join(this._path, table, `${columnName}.txt`);
+        const data = this.fileToTypedArray(tablePath);
+        return new LiteralColumn(data);
+    }
 
-        throw new Error("can't find " + columnName);
+    private fileToTypedArray(path: string): unknown[] {
+        const strings = fs.readFileSync(path, 'utf8').split('\n');
+        const sample = strings.slice(0, 10);
+        const asNumbers = strings.map(parseFloat);
+
+        return asNumbers.every(n => !isNaN(n)) 
+            ? asNumbers
+            : strings;
     }
 }
 
