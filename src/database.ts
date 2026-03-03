@@ -27,14 +27,14 @@ export class StelaDB {
 }
 
 export default class Query {
-    private _database: Database;
+    private _database: StelaDB;
     private _table: string;
 
     private _aggregations: { columnName: string, aggregation: AggregationName }[] = [];
     private _filters: { columnName: string, value: unknown }[] = [];
     private _grouping: string | undefined;
 
-    constructor(table: string, database: Database) {
+    constructor(table: string, database: StelaDB) {
         this._table = table;
         this._database = database;
     }
@@ -100,10 +100,6 @@ interface Column {
     group(mask: Set<number>): Map<unknown, Set<number>>;
     aggregate(aggregator: Aggregator, mask: Set<number>): number;
     length(): number;
-}
-
-interface Table {
-    columns: Map<string, Column>;
 }
 
 class LiteralColumn<T> implements Column {
