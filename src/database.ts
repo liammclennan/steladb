@@ -1,4 +1,4 @@
-type AggregationName = "min" | "max" | "sum";
+import * as Aggregation from "./aggregation";
 
 export class StelaDB {
     private _path: string;
@@ -7,98 +7,21 @@ export class StelaDB {
         this._path = path;
     }
 
-    query(table: string) {
-        return new Query(table, this);
-    }
-
     column(table: string, columnName: string): Column {
-        const makes = columnFrom(['Honda', 'Tesla', 'Honda','Ford','BMW','Ford','Volkswagen','Tesla', 'Ford', 'Kia']);
-        
         switch (columnName) {
-            case "make": return columnFrom(['Honda',    'Tesla',    'Honda',    'Ford',     'BMW',  'Ford', 'Volkswagen',   'Tesla',    'Ford', 'Kia']);
-            case "year": return columnFrom(['1999',     '1999',     '1995',     '1999',     '1998', '1999', '2000',         '1999',     '1999', '2000']);
-            case "price": return columnFrom([10_000,    12_000,     8_000,      10_000,     10_000, 12_000, 8_000,          14_000,     10_000, 16_000]);
+            case "make": return new LiteralColumn(['Honda',    'Tesla',    'Honda',    'Ford',     'BMW',  'Ford', 'Volkswagen',   'Tesla',    'Ford', 'Kia']);
+            case "year": return new LiteralColumn(['1999',     '1999',     '1995',     '1999',     '1998', '1999', '2000',         '1999',     '1999', '2000']);
+            case "price": return new LiteralColumn([10_000,    12_000,     8_000,      10_000,     10_000, 12_000, 8_000,          14_000,     10_000, 16_000]);
         }
 
         throw new Error("can't find " + columnName);
-
-        return new LiteralColumn([]);
-    }
-}
-
-export default class Query {
-    private _database: StelaDB;
-    private _table: string;
-
-    private _aggregations: { columnName: string, aggregation: AggregationName }[] = [];
-    private _filters: { columnName: string, value: unknown }[] = [];
-    private _grouping: string | undefined;
-
-    constructor(table: string, database: StelaDB) {
-        this._table = table;
-        this._database = database;
-    }
-
-    select(columnName: string, aggregation: AggregationName): Query {
-        this._aggregations.push({ columnName, aggregation });
-        return this;
-    }
-
-    where(columnName: string, value: unknown) {
-        this._filters.push({ columnName, value });
-        return this;
-    }
-
-    groupBy(columnName: string) {
-        this._grouping = columnName;
-        return this;
-    }
-
-    evaluate(): unknown[][] {
-        const restriction = this._filters.reduce((p, c, ix) => {
-            const col = this._database.column(this._table, c.columnName);
-            const filtered = col.filter(c.value);
-            return ix === 0 ? filtered : p.intersection(filtered);
-        }, new Set() as Set<number>);
-
-        const groups = typeof this._grouping !== "undefined" 
-            ? this._database.column(this._table, this._grouping).group(restriction)
-            : new Map([
-                [null, restriction]
-            ]);
-
-        const results = [];
-        const heading = [];
-
-        if (typeof this._grouping !== "undefined") {
-            heading.push(this._grouping);
-        }
-
-        for (const select of this._aggregations) {
-            heading.push(`${select.aggregation}(${select.columnName})`);
-        }
-        results.push(heading);
-
-        for (const [value, row_ixs] of groups) {
-            const row = [];
-            row.push(value);
-            
-            for (const select of this._aggregations) {
-                const aggregator = getAggregator(select.aggregation);
-                const column = this._database.column(this._table, select.columnName);
-                const reduction = column.aggregate(aggregator, row_ixs);
-                row.push(reduction);
-            }
-            results.push(row);
-        }
-        return results;
     }
 }
 
 interface Column {
     filter(value: unknown):  Set<number>;
     group(mask: Set<number>): Map<unknown, Set<number>>;
-    aggregate(aggregator: Aggregator, mask: Set<number>): number;
+    aggregate(aggregator: Aggregation.Aggregator, mask: Set<number>): number;
     length(): number;
 }
 
@@ -132,7 +55,7 @@ class LiteralColumn<T> implements Column {
         return groups;
     }
 
-    aggregate(aggregator: Aggregator, mask: Set<number>): number {
+    aggregate(aggregator: Aggregation.Aggregator, mask: Set<number>): number {
         const masked = [...mask].map((row_ix) => this._data[row_ix]);
         return aggregator.aggregate(masked);
     }
@@ -141,38 +64,4 @@ class LiteralColumn<T> implements Column {
         return this._data.length;
     }
 
-}
-
-interface Aggregator {
-    aggregate(data: unknown[]): number;    
-}
-
-class Min implements Aggregator {
-    aggregate(data: unknown[]): number {
-        return Math.min(...(data as number[]));
-    }
-}
-
-class Max implements Aggregator {
-    aggregate(data: unknown[]): number {
-        return Math.max(...(data as number[]));
-    }
-}
-
-class Sum implements Aggregator {
-    aggregate(data: unknown[]): number {
-        return (data as number[]).reduce((p,c) => p + c, 0);
-    }
-}
-
-export function columnFrom(data: unknown[]): Column {
-    return new LiteralColumn(data);
-}
-
-function getAggregator(name: AggregationName): Aggregator {
-    switch (name) {
-        case "min": return new Min();
-        case "max": return new Max();
-        case "sum": return new Sum();
-    }
 }
