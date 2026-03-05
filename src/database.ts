@@ -15,6 +15,24 @@ export class StelaDB {
         return new LiteralColumn(data);
     }
 
+    schema(): { [table: string]: string[] } {
+        const schema: { [table: string]: string[] } = {};
+        const tableNames = fs.readdirSync(this._path, { withFileTypes: true })
+            .filter(dirent => dirent.isDirectory())
+            .map(dirent => dirent.name);
+
+        for (const tableName of tableNames) {
+            schema[tableName] = fs.readdirSync(path.join(this._path, tableName), { withFileTypes: false })
+                .map(fileName => (fileName as string).split(".")[0]);
+        }
+
+        return schema;
+    }
+
+    length(table: string): number {
+        const schema = this.schema();
+    }
+
     private fileToTypedArray(path: string): unknown[] {
         const strings = fs.readFileSync(path, 'utf8').split('\n');
         const sample = strings.slice(0, 10);
@@ -26,11 +44,12 @@ export class StelaDB {
     }
 }
 
-interface Column {
+export interface Column {
     filter(value: unknown):  Set<number>;
     group(mask: Set<number>): Map<unknown, Set<number>>;
     aggregate(aggregator: Aggregation.Aggregator, mask: Set<number>): number;
     length(): number;
+    get(row_ix: number): unknown;
 }
 
 class LiteralColumn<T> implements Column {
@@ -66,6 +85,10 @@ class LiteralColumn<T> implements Column {
     aggregate(aggregator: Aggregation.Aggregator, mask: Set<number>): number {
         const masked = [...mask].map((row_ix) => this._data[row_ix]);
         return aggregator.aggregate(masked);
+    }
+
+    get(row_ix: number): unknown {
+        return this._data[row_ix];
     }
 
     length(): number {

@@ -43,6 +43,33 @@ export class Query {
             return ix === 0 ? filtered : p.intersection(filtered);
         }, new Set() as Set<number>);
 
+        if (this._select.length > 0) {
+            return this.evaluateSelect(database, restriction);
+        } else {
+            return this.evaluateAggregation(database, restriction);
+        }
+    }
+
+    evaluateSelect(database: Database.StelaDB, restriction: Set<number>): unknown[][] {
+        const schema = database.schema();
+        const tableSchema = schema[this._table];
+        const isSelectAll = this._select[0] === "*";
+        const columns = (isSelectAll ? tableSchema : this._select)
+            .map(columnName => [columnName, database.column(this._table, columnName)] as [string, Database.Column]);
+        
+        const heading = columns.map(([columnName, column]) => columnName);
+        const results: unknown[][] = [heading];
+        const row_ixs = [...restriction];
+        
+        for (const row_ix of row_ixs) {
+            const row = columns.map(([columnName, column]) => column.get(row_ix));
+            results.push(row);
+        }
+
+        return results;
+    }
+
+    evaluateAggregation(database: Database.StelaDB, restriction: Set<number>): unknown[][] {
         const groups = typeof this._grouping !== "undefined" 
             ? database.column(this._table, this._grouping).group(restriction)
             : new Map([
