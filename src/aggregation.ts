@@ -1,5 +1,7 @@
 export type AggregationName = "min" | "max" | "sum" | "mean";
 
+export type AggregationInstruction = { columnName: string, aggregation: AggregationName };
+
 export interface Aggregator {
     aggregate(data: unknown[]): number;    
 }
@@ -35,4 +37,8 @@ export function getAggregator(name: AggregationName): Aggregator {
         case "sum": return new Sum();
         case "mean": return new Mean();
     }
+}
+
+export function formatAggregationInstruction(instruction: AggregationInstruction): string {
+    return `${instruction.aggregation}(${instruction.columnName})`;
 }

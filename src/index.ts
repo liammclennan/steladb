@@ -3,16 +3,22 @@ import { Query } from "./query";
 
 const db = new StelaDB("./data");
 
-console.log(
+const queries = [
     new Query("cars")
         .where("year", 2018)
         .groupBy("make")
         .select("price", "min")
         .select("price", "max")
-        .select("mileage", "mean")
-        .evaluate(db));
-
-console.log(
+        .select("mileage", "mean"),
     new Query("cars")
-        .select("*", undefined)
-        .evaluate(db));
+        .select("*"),
+    new Query("cars")
+        .select("year")
+        .select("model")
+        .select("mileage")
+];
+
+for (const query of queries) {
+    console.log(query.toString());
+    console.log(query.evaluate(db));
+}

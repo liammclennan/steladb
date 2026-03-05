@@ -5,7 +5,7 @@ export class Query {
     private _table: string;
     private _select: string[] = [];
 
-    private _aggregations: { columnName: string, aggregation: Aggregation.AggregationName }[] = [];
+    private _aggregations: Aggregation.AggregationInstruction[] = [];
     private _filters: { columnName: string, value: unknown }[] = [];
     private _grouping: string | undefined;
 
@@ -13,14 +13,16 @@ export class Query {
         this._table = table;
     }
 
-    select(columnName: string, aggregation: Aggregation.AggregationName | undefined): Query {
+    select(columnName: string, aggregation?: Aggregation.AggregationName): Query {
         if (typeof aggregation === "undefined") {
-            if (columnName === "*") {
-                this._select.push(columnName);
-            } else {
-                throw new Error("`aggregation` is required");
+            if (this._aggregations.length > 0) {
+                throw new Error("A query must be a projection or an aggregation - never both");
             }
+            this._select.push(columnName);
         } else {   
+            if (this._select.length > 0) {
+                throw new Error("A query must be a projection or an aggregation - never both");
+            }
             this._aggregations.push({ columnName, aggregation });
         }
         return this;
@@ -36,12 +38,14 @@ export class Query {
         return this;
     }
 
-    evaluate(database: Database.StelaDB): unknown[][] {
-        const restriction = this._filters.reduce((p, c, ix) => {
-            const col = database.column(this._table, c.columnName);
-            const filtered = col.filter(c.value);
-            return ix === 0 ? filtered : p.intersection(filtered);
-        }, new Set() as Set<number>);
+    evaluate(database: Database.StelaDB): Row[] {
+        const restriction = this._filters.length === 0 
+            ? new Set([...Array(database.length(this._table)).keys()])
+            : this._filters.reduce((p, c, ix) => {
+                const col = database.column(this._table, c.columnName);
+                const filtered = col.filter(c.value);
+                return ix === 0 ? filtered : p.intersection(filtered);
+            }, new Set() as Set<number>);
 
         if (this._select.length > 0) {
             return this.evaluateSelect(database, restriction);
@@ -50,7 +54,7 @@ export class Query {
         }
     }
 
-    evaluateSelect(database: Database.StelaDB, restriction: Set<number>): unknown[][] {
+    evaluateSelect(database: Database.StelaDB, restriction: Set<number>): Row[] {
         const schema = database.schema();
         const tableSchema = schema[this._table];
         const isSelectAll = this._select[0] === "*";
@@ -58,7 +62,7 @@ export class Query {
             .map(columnName => [columnName, database.column(this._table, columnName)] as [string, Database.Column]);
         
         const heading = columns.map(([columnName, column]) => columnName);
-        const results: unknown[][] = [heading];
+        const results: Row[] = [heading];
         const row_ixs = [...restriction];
         
         for (const row_ix of row_ixs) {
@@ -69,7 +73,7 @@ export class Query {
         return results;
     }
 
-    evaluateAggregation(database: Database.StelaDB, restriction: Set<number>): unknown[][] {
+    evaluateAggregation(database: Database.StelaDB, restriction: Set<number>): Row[] {
         const groups = typeof this._grouping !== "undefined" 
             ? database.column(this._table, this._grouping).group(restriction)
             : new Map([
@@ -84,7 +88,7 @@ export class Query {
         }
 
         for (const select of this._aggregations) {
-            heading.push(`${select.aggregation}(${select.columnName})`);
+            heading.push(Aggregation.formatAggregationInstruction(select));
         }
         results.push(heading);
 
@@ -105,4 +109,29 @@ export class Query {
         }
         return results;
     }
+
+    toString(): string {
+        const select = this._select.join(", ") + this._aggregations.map(Aggregation.formatAggregationInstruction).join(", ");
+        let result = 
+`
+SELECT ${select}
+FROM ${this._table}`;
+
+        if (this._filters.length > 0) {
+            result += 
+`
+WHERE ${this._filters.map(f => `${f.columnName} = ${f.value}`)}`;
+        }
+
+        if (this._grouping) {
+            result += 
+`
+GROUP BY ${this._grouping}`;
+        }
+
+        return result;
+
+    }
 }
+
+type Row = unknown[];

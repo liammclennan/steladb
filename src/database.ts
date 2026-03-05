@@ -31,6 +31,7 @@ export class StelaDB {
 
     length(table: string): number {
         const schema = this.schema();
+        return this.column(table, schema[table][0]).length();
     }
 
     private fileToTypedArray(path: string): unknown[] {
