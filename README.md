@@ -1,6 +1,6 @@
 # StelaDB
 
-The simplest possible, read-only, column oriented database. Intended as a didactic tool, not for any kind of usage. 
+The simplest possible, read-only, column oriented database. Intended as a reference for those interested in column store internals, not for any kind of usage. 
 
 ## Demo
 
