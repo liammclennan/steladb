@@ -2,8 +2,6 @@
 
   "include": ["src/**/*"],
   "exclude": ["node_modules"],
-
-
   "compilerOptions": {
     "lib": ["esnext","dom"],
     "outDir": "./dist",

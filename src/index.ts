@@ -1,5 +1,5 @@
 import { Query } from "./query";
-import * as Evaluation from "./evaluation";
+import * as Evaluation from "./evaluation/evaluation";
 
 export class StelaDB {
     private _path: string;

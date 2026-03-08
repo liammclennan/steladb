@@ -1,4 +1,4 @@
-import * as Aggregation from "./aggregation";
+import * as Aggregation from "./evaluation/aggregation";
 
 export class Query {
     _table: string;

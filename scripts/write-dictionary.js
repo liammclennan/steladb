@@ -34,7 +34,19 @@ fs.readFile(csv, 'utf8', (err, data) => {
     // Write each column to its own .txt file
     headers.forEach((header, index) => {
         const fileName = `${header.toLowerCase()}.txt`;
-        const content = "literal\n" + columns[index].join('\n');
+        let content = "";
+        
+        if (fileName === "make.txt") {
+            content += "dictionary\n";
+            const uniques = [...new Set(columns[index])];
+            content += JSON.stringify(uniques) + "\n";
+            for (const v of columns[index]) {
+                content += uniques.indexOf(v) + "\n";
+            }
+        } else {
+            content += "literal\n";
+            content += columns[index].join('\n');
+        }
         
         fs.writeFile(`./data/${table}/${fileName}`, content, (err) => {
             if (err) {

@@ -1,16 +1,25 @@
 import path from 'node:path';
 import fs from "node:fs";
 
-export function fileToTypedArray(dbPath: string, tableName: string, columnName: string): unknown[] {
+export function readString(dbPath: string, tableName: string, columnName: string): string {
+    const tablePath = path.join(dbPath, tableName, `${columnName}.txt`);
+    return fs.readFileSync(tablePath, 'utf8');
+}
+
+export function fileToTypedArray(dbPath: string, tableName: string, columnName: string): {format: string, data: unknown[]} {
     const tablePath = path.join(dbPath, tableName, `${columnName}.txt`);
 
     const strings = fs.readFileSync(tablePath, 'utf8').split('\n');
-    const sample = strings.slice(0, 10);
+    const format = strings.splice(0,1)[0];
+    const sample = strings.slice(1, 10);
     const asNumbers = strings.map(parseFloat);
 
-    return asNumbers.every(n => !isNaN(n)) 
-        ? asNumbers
-        : strings;
+    return { 
+        format, 
+        data: sample.map(parseFloat).every(n => !isNaN(n)) 
+            ? asNumbers
+            : strings
+    };
 }
 
 export function schema(dbPath: string): { [table: string]: string[] } {
