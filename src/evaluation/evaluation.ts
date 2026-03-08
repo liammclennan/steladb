@@ -1,23 +1,39 @@
 import * as Aggregation from "./aggregation";
 import { Query } from "../query";
 import * as Io from "../io";
-import * as Columns from "./columns";
+import * as Columns from "./columns/columns";
+import * as dictionaryColumn from "./columns/dictionary-column";
 
 export type Row = unknown[];
 
+/**
+ * Evaluate a query. 
+ * 
+ * @param path Path to a database directory
+ * @param query A query.
+ * @returns The result of evaluating `query` against the database at `path`. 
+ */
 export function evaluate(path: string, query: Query): Row[] {
     const db = new Db(path);
     return db.evaluate(query);
 }
 
+/**
+ * Internal database model.
+*/ 
 class Db {
     _path: string;
-    _columnTypes = [Columns.LiteralColumn, Columns.DictionaryColumn];
+    _columnTypes = [Columns.LiteralColumn, dictionaryColumn.DictionaryColumn];
 
     constructor(path: string) {
         this._path = path;
     }
 
+    /** 
+     * Create a column abstraction. 
+     * 
+     * The first line of the column file identifies its encoding.
+     */
     column(table: string, columnName: string): Columns.Column {
         const content = Io.readString(this._path, table, columnName);
         const format = content.substring(0, content.indexOf("\n"));
@@ -46,20 +62,20 @@ class Db {
             }, new Set() as Set<number>);
 
         if (query._select.length > 0) {
-            return this.evaluateSelect(query, restriction);
+            return this.evaluateProjection(query, restriction);
         } else {
             return this.evaluateAggregation(query, restriction);
         }
     }
 
-    evaluateSelect(query: Query, restriction: Set<number>): Row[] {
+    evaluateProjection(query: Query, restriction: Set<number>): Row[] {
         const schema = Io.schema(this._path);
         const tableSchema = schema[query._table];
         const isSelectAll = query._select[0] === "*";
         const columns = (isSelectAll ? tableSchema : query._select)
             .map(columnName => [columnName, this.column(query._table, columnName)] as [string, Columns.Column]);
         
-        const heading = columns.map(([columnName, column]) => columnName);
+        const heading = columns.map(([columnName, _]) => columnName);
         const results: Row[] = [heading];
         const row_ixs = [...restriction];
         
@@ -90,7 +106,7 @@ class Db {
         }
         results.push(heading);
 
-        for (const [value, row_ixs] of groups) {
+        for (const [value, mask] of groups) {
             const row = [];
             
             if (typeof query._grouping !== "undefined") {
@@ -100,7 +116,7 @@ class Db {
             for (const select of query._aggregations) {
                 const aggregator = Aggregation.getAggregator(select.aggregation);
                 const column = this.column(query._table, select.columnName);
-                const reduction = column.aggregate(aggregator, row_ixs);
+                const reduction = column.aggregate(aggregator, mask);
                 row.push(reduction);
             }
             results.push(row);
