@@ -31,10 +31,10 @@ const queries = [
         .select("year")
         .select("model")
         .select("mileage")
-        
+
 ];
 
 for (const query of queries) {
     console.log(query.toString());
-    console.log(db.evaluate(query));
+    console.table(db.evaluate(query));
 }
