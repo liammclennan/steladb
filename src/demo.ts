@@ -18,7 +18,7 @@ const queries = [
     new Query("cars")
         .select("year")
         .select("model")
-        .select("mileage")
+        .select("mileage"),
 
 ];
 

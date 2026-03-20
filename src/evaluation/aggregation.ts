@@ -8,25 +8,44 @@ export interface Aggregator {
 
 export class Min implements Aggregator {
     aggregate(data: unknown[]): number {
-        return Math.min(...(data as number[]));
+        let minSoFar = Number.MAX_SAFE_INTEGER;
+
+        for (const v of data) {
+            let n = v as number;
+            if (n < minSoFar) {
+                minSoFar = n;
+            }
+        }
+
+        return minSoFar;
     }
 }
 
 export class Max implements Aggregator {
     aggregate(data: unknown[]): number {
-        return Math.max(...(data as number[]));
+        let maxSoFar = Number.MIN_SAFE_INTEGER;
+
+        for (const v of data) {
+            let n = v as number;
+            if (n > maxSoFar) {
+                maxSoFar = n;
+            }
+        }
+
+        return maxSoFar;
     }
 }
 
 export class Sum implements Aggregator {
     aggregate(data: unknown[]): number {
+        const checkpoints: number[] = [];
         return (data as number[]).reduce((p,c) => p + c, 0);
     }
 }
 
 export class Mean implements Aggregator {
     aggregate(data: unknown[]): number {
-        return (data as number[]).reduce((p,c) => p + c, 0) / data.length;
+        return (new Sum()).aggregate(data) / data.length;
     }
 }
 
