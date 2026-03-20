@@ -2,6 +2,8 @@
 
 The simplest possible, read-only, column oriented database. Intended as a reference for those interested in column store internals, not for any kind of usage. 
 
+> Requires a recent version of node. 
+
 ## Demo
 
 To create a demo database:

@@ -3,6 +3,18 @@ import * as Aggregation from "../aggregation";
 
 /**
  * A column that is stored as raw, newline-delimeted values. 
+ * 
+ * E.g. (make.txt)
+ * 
+ * ```md
+ * literal
+ * Toyota
+ * Honda
+ * Ford
+ * Ford
+ * Honda
+ * Honda
+ * ```
  */
 export class LiteralColumn<T> implements Column {
     static format: string = "literal";

@@ -6,6 +6,19 @@ import { Column } from "./columns";
  * the first line is a serialized array of all unique values
  * in the column. Each subsequent line is an index into that array, 
  * indicating the value for that row. 
+ * 
+ * E.g. (make.txt)
+ * 
+ * ```md
+ * dictionary
+ * ["Toyota","Honda","Ford"]
+ * 0
+ * 1
+ * 2
+ * 2
+ * 1
+ * 1
+ * ```
  */
 export class DictionaryColumn<T> implements Column {
     static format: string = "dictionary";
