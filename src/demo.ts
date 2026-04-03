@@ -1,4 +1,4 @@
-import StelaDB from "./index";
+import StelaDB, { dump } from "./index";
 import { Query } from "./query";
 
 const db = new StelaDB("./data");
@@ -24,5 +24,5 @@ const queries = [
 
 for (const query of queries) {
     console.log(query.toString());
-    console.table(db.evaluate(query));
+    dump(db.evaluate(query));
 }

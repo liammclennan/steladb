@@ -12,3 +12,13 @@ export default class StelaDB {
         return Evaluation.evaluate(this._path, query);
     }
 }
+
+export function dump(table: Evaluation.Row[]) {
+    const headers = table[0];
+
+    console.table(
+        table.slice(1)
+            .map(row => Object.fromEntries(
+                headers.map((header,ix) => [header, row[ix]])
+            )));
+}
