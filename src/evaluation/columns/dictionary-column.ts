@@ -27,11 +27,23 @@ export class DictionaryColumn<T> implements Column {
 
     constructor(content: string) {
         this._key = JSON.parse(content.substring(0, content.indexOf("\n")));
-        this._items = content.split("\n").slice(1).filter(l => l.length > 0).map(l => parseInt(l));
+        this._items = content
+            .split("\n")
+            .slice(1)
+            .filter(l => l.length > 0)
+            .map(l => parseInt(l));
+    }
+
+    get(row_ix: number): unknown {
+        return this._key[this._items[row_ix]];
     }
 
     filter(value: T): Set<number> {
-        return new Set(this._items.flatMap((v, ix) => this.get(ix) === value ? [ix] : []));
+        const indexOfValue = this._key.indexOf(value);
+
+        return indexOfValue === null 
+            ? new Set() 
+            : new Set(this._items.flatMap((v, ix) => v === indexOfValue ? [ix] : []));
     }
 
     group(mask: Set<number> = new Set([...Array(this._items.length).keys()])): Map<unknown, Set<number>> {
@@ -47,7 +59,7 @@ export class DictionaryColumn<T> implements Column {
                 groups.set(v, new Set());
             }
             const group = groups.get(v)!;
-            groups.set(v, group.union(new Set([row_ix])));
+            groups.set(v, group.add(row_ix));
         }
 
         return groups;
@@ -56,10 +68,6 @@ export class DictionaryColumn<T> implements Column {
     aggregate(aggregator: Aggregation.Aggregator, mask: Set<number>): number {
         const masked = [...mask].map((row_ix) => this.get(row_ix));
         return aggregator.aggregate(masked);
-    }
-
-    get(row_ix: number): unknown {
-        return this._key[this._items[row_ix]];
     }
 
     length(): number {
