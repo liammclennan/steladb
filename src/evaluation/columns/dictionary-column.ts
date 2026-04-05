@@ -22,25 +22,24 @@ import { Column } from "./columns";
  */
 export class DictionaryColumn<T> implements Column {
     static format: string = "dictionary";
-    private _key: unknown[];
+    private _dictionary: unknown[];
     private _items: number[];
 
     constructor(content: string) {
-        this._key = JSON.parse(content.substring(0, content.indexOf("\n")));
-        this._items = content
-            .split("\n")
-            .slice(1)
+        const [dictionary, ...values] = content.split("\n");
+        this._dictionary = JSON.parse(dictionary);
+        this._items = values
             .filter(l => l.length > 0)
-            .map(l => parseInt(l));
+            .map(l => parseInt(l, 10));
     }
 
     get(row_ix: number): unknown {
-        return this._key[this._items[row_ix]];
+        return this._dictionary[this._items[row_ix]];
     }
 
     filter(value: T): Set<number> {
-        const indexOfValue = this._key.indexOf(value);
-
+        const indexOfValue = this._dictionary.indexOf(value);
+        
         return indexOfValue === null 
             ? new Set() 
             : new Set(this._items.flatMap((v, ix) => v === indexOfValue ? [ix] : []));
