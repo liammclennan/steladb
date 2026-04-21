@@ -6,6 +6,7 @@
   "scripts": {
     "test": "npx tsx --test",
     "start": "npx tsx src/demo.ts",
+    "digits": "npx tsx src/demo-digits.ts",
     "write": "node scripts/write.js ./assets/cars.csv cars",
     "write-dictionary": "node scripts/write-dictionary.js ./assets/cars.csv cars"
   },
