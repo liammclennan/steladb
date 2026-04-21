@@ -22,7 +22,7 @@ import { Column } from "./columns";
  */
 export class DictionaryColumn<T> implements Column {
     static format: string = "dictionary";
-    private _dictionary: unknown[];
+    private _dictionary: T[];
     private _items: number[];
 
     constructor(content: string) {
@@ -33,7 +33,7 @@ export class DictionaryColumn<T> implements Column {
             .map(l => parseInt(l, 10));
     }
 
-    get(row_ix: number): unknown {
+    get(row_ix: number): T {
         return this._dictionary[this._items[row_ix]];
     }
 
@@ -45,8 +45,8 @@ export class DictionaryColumn<T> implements Column {
             : new Set(this._items.flatMap((v, ix) => v === indexOfValue ? [ix] : []));
     }
 
-    group(mask: Set<number> = new Set([...Array(this._items.length).keys()])): Map<unknown, Set<number>> {
-        const groups = new Map<unknown, Set<number>>();
+    group(mask: Set<number> = new Set([...Array(this._items.length).keys()])): Map<T, Set<number>> {
+        const groups = new Map<T, Set<number>>();
 
         for (let row_ix = 0; row_ix < this._items.length; row_ix++) {
             if (!mask.has(row_ix)) {
